@@ -1,0 +1,2003 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #05080f;
+            --card-bg: #0d1322;
+            --primary-green: #00ff66;
+            --primary-blue: #00f3ff;
+            --text-light: #e2e8f0;
+            --text-muted: #94a3b8;
+            --danger-color: #ff3366;
+            --border-color: #1e293b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-light); padding: 12px; }
+        
+        .container { width: 100%; max-width: 1050px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+        
+        header { 
+            display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; 
+            background: linear-gradient(135deg, #091c18 0%, #061826 100%); 
+            color: var(--text-light); padding: 8px 15px; border-radius: 10px; 
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.15), inset 0 0 10px rgba(0, 243, 255, 0.1); 
+            border: 1px solid rgba(0, 255, 102, 0.3); width: 100%;
+        }
+        .logo-area { display: flex; align-items: center; gap: 8px; }
+        .logo-icon { 
+            background: var(--card-bg); color: var(--primary-green); width: 30px; height: 30px; 
+            display: flex; align-items: center; justify-content: center; border-radius: 50%; 
+            font-size: 13px; box-shadow: 0 0 12px rgba(0, 255, 102, 0.5);
+            border: 1px solid var(--primary-green);
+        }
+        .header-title h1 { font-size: 13px; font-weight: 700; color: var(--primary-green); text-shadow: 0 0 8px rgba(0,255,102,0.4); white-space: nowrap; }
+        .header-title p { font-size: 9px; color: var(--primary-blue); text-shadow: 0 0 6px rgba(0,243,255,0.4); white-space: nowrap; }
+
+        .header-sync-widget {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(13, 19, 34, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 4px 8px;
+            border-radius: 6px;
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.1);
+        }
+        .header-sync-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--primary-blue);
+            text-shadow: 0 0 4px rgba(0,243,255,0.4);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .top-widgets-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .widget-box {
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.08);
+            height: 48px;
+            width: 100%;
+        }
+        .widget-box.clock-widget {
+            border-color: rgba(0, 255, 102, 0.3);
+            box-shadow: 0 0 12px rgba(0, 255, 102, 0.08);
+            flex-direction: column;
+            gap: 2px;
+        }
+        #digitalClock {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-green);
+            text-shadow: 0 0 6px rgba(0, 255, 102, 0.6);
+            font-family: monospace;
+            line-height: 1;
+        }
+        #digitalDateWeek {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--primary-blue);
+            text-shadow: 0 0 4px rgba(0, 243, 255, 0.5);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 28px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #1e293b;
+            transition: .3s;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 10px; width: 10px;
+            left: 2px; bottom: 2px;
+            background-color: var(--text-muted);
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-green);
+            box-shadow: 0 0 5px rgba(0,255,102,0.6);
+        }
+        input:checked + .slider:before {
+            transform: translateX(12px);
+            background-color: #05080f;
+        }
+
+        .widget-action-btn {
+            background: rgba(0, 255, 102, 0.1); color: var(--primary-green); border: 1px solid var(--primary-green); 
+            padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; 
+            box-shadow: 0 0 6px rgba(0,255,102,0.2); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .widget-action-btn:hover { background: rgba(0, 255, 102, 0.2); box-shadow: 0 0 10px rgba(0,255,102,0.4); }
+
+        .master-layout {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            width: 100%;
+        }
+        @media (max-width: 1024px) {
+            .master-layout { flex-direction: column; }
+        }
+
+        .sticky-sidebar {
+            width: 300px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        @media (min-width: 1025px) {
+            .sticky-sidebar {
+                position: sticky;
+                top: 12px;
+            }
+        }
+        @media (max-width: 1024px) {
+            .sticky-sidebar { width: 100%; }
+        }
+
+        .main-content {
+            flex-grow: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .control-panel { 
+            background: var(--card-bg); padding: 12px; border-radius: 10px; 
+            border: 1px solid rgba(0, 243, 255, 0.3); 
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.1);
+        }
+        .filter-grid-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+        .control-box { display: flex; flex-direction: column; gap: 3px; }
+        .control-box label { font-size: 10px; font-weight: 600; color: var(--primary-blue); text-shadow: 0 0 4px rgba(0,243,255,0.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .control-box select, .control-box input { 
+            padding: 6px 6px; border: 1px solid rgba(0, 255, 102, 0.4); border-radius: 6px; 
+            font-size: 11px; background: #070c18; color: var(--text-light); outline: none; width: 100%;
+        }
+
+        .new-acc-card { 
+            display: none; background: var(--card-bg); padding: 12px; border-radius: 10px; 
+            border: 1px dashed var(--primary-green); box-shadow: 0 0 12px rgba(0,255,102,0.15); 
+        }
+        .new-acc-card h4 { color: var(--primary-green); font-size: 12px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; text-shadow: 0 0 6px rgba(0,255,102,0.3); }
+        .acc-form-grid { display: flex; flex-direction: column; gap: 6px; }
+
+        .form-container { 
+            background: var(--card-bg); padding: 12px; border-radius: 10px; 
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); border: 1px solid rgba(0, 243, 255, 0.4); 
+        }
+        .form-container h3 { color: var(--primary-blue); margin-bottom: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; text-shadow: 0 0 6px rgba(0,243,255,0.4); }
+        .form-grid { display: flex; flex-direction: column; gap: 6px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 10px; font-weight: 600; margin-bottom: 2px; color: var(--primary-green); text-shadow: 0 0 4px rgba(0,255,102,0.3); }
+        .form-group input, .form-group select { 
+            padding: 6px 8px; border: 1px solid rgba(0, 243, 255, 0.4); border-radius: 6px; 
+            font-size: 11px; outline: none; background: #070c18; color: var(--text-light); width: 100%;
+        }
+        
+        .btn-submit { 
+            background: linear-gradient(135deg, #00ff66 0%, #00b347 100%); color: #05080f; border: none; 
+            padding: 7px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; 
+            width: 100%; box-shadow: 0 0 10px rgba(0, 255, 102, 0.4); transition: 0.2s;
+        }
+        .btn-submit:hover { box-shadow: 0 0 15px rgba(0, 255, 102, 0.7); }
+
+        .export-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn-export { flex: 1; min-width: 80px; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 8px 6px; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; color: #fff; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .btn-save { background-color: #00875a; box-shadow: 0 0 8px rgba(0, 135, 90, 0.4); }
+        .btn-pdf { background-color: #cc0000; box-shadow: 0 0 8px rgba(204, 0, 0, 0.4); }
+        .btn-excel { background-color: #00802b; box-shadow: 0 0 8px rgba(0, 128, 43, 0.4); }
+
+        .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+        .card { 
+            background: var(--card-bg); padding: 12px; border-radius: 8px; box-shadow: 0 0 12px rgba(0,0,0,0.5); 
+            border-left: 4px solid var(--primary-green); border-top: 1px solid rgba(0,255,102,0.2);
+            border-right: 1px solid rgba(0,255,102,0.2); border-bottom: 1px solid rgba(0,255,102,0.2);
+        }
+        .card:nth-child(2) {
+            border-left-color: var(--danger-color);
+            border-top: 1px solid rgba(255,51,102,0.2);
+            border-right: 1px solid rgba(255,51,102,0.2);
+            border-bottom: 1px solid rgba(255,51,102,0.2);
+        }
+        .card h3 { font-size: 10px; color: var(--text-muted); margin-bottom: 3px; text-transform: uppercase; }
+        .card:nth-child(1) .amount { font-size: 15px; font-weight: 700; color: var(--primary-green); text-shadow: 0 0 6px rgba(0,255,102,0.4); }
+        .card:nth-child(2) .amount { font-size: 15px; font-weight: 700; color: var(--danger-color); text-shadow: 0 0 6px rgba(255,51,102,0.4); }
+        
+        h2.section-title { 
+            font-size: 12px; color: var(--primary-blue); margin: 4px 0 6px 0; display: flex; align-items: center; gap: 5px; 
+            border-bottom: 1px solid rgba(0,243,255,0.3); padding-bottom: 4px; text-shadow: 0 0 6px rgba(0,243,255,0.3);
+        }
+        
+        .table-responsive { 
+            background: var(--card-bg); border-radius: 8px; box-shadow: 0 0 12px rgba(0,0,0,0.5); 
+            overflow-x: auto; margin-bottom: 8px; border: 1px solid var(--border-color); 
+            width: 100%;
+        }
+        table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; font-size: 11px; white-space: nowrap; }
+        th, td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); color: var(--text-light); overflow: hidden; text-overflow: ellipsis; }
+        th { background-color: #0f172a; color: var(--primary-green); font-weight: 600; text-shadow: 0 0 4px rgba(0,255,102,0.3); }
+        
+        #savingsTable th:nth-child(1), #savingsTable td:nth-child(1) { width: 28%; }
+        #savingsTable th:nth-child(2), #savingsTable td:nth-child(2) { width: 24%; }
+        #savingsTable th:nth-child(3), #savingsTable td:nth-child(3) { width: 24%; }
+        #savingsTable th:nth-child(4), #savingsTable td:nth-child(4) { width: 24%; }
+
+        #creditCardTable th:nth-child(1), #creditCardTable td:nth-child(1) { width: 28%; }
+        #creditCardTable th:nth-child(2), #creditCardTable td:nth-child(2) { width: 24%; }
+        #creditCardTable th:nth-child(3), #creditCardTable td:nth-child(3) { width: 24%; }
+        #creditCardTable th:nth-child(4), #creditCardTable td:nth-child(4) { width: 24%; }
+
+        #transactionTable th:nth-child(1), #transactionTable td:nth-child(1) { width: 13%; }
+        #transactionTable th:nth-child(2), #transactionTable td:nth-child(2) { width: 24%; }
+        #transactionTable th:nth-child(3), #transactionTable td:nth-child(3) { width: 12%; }
+        #transactionTable th:nth-child(4), #transactionTable td:nth-child(4) { width: 18%; }
+        #transactionTable th:nth-child(5), #transactionTable td:nth-child(5) { width: 16%; }
+        #transactionTable th:nth-child(6), #transactionTable td:nth-child(6) { width: 12%; }
+        #transactionTable th:nth-child(7), #transactionTable td:nth-child(7) { width: 5%; text-align: center; }
+
+        tr.clickable-row { cursor: pointer; transition: background 0.2s; }
+        tr.clickable-row:hover { background-color: rgba(0, 243, 255, 0.08); }
+        
+        .badge { padding: 2px 6px; border-radius: 8px; font-size: 9px; font-weight: 600; display: inline-block; }
+        .badge-income { background-color: rgba(0,255,102,0.15); color: var(--primary-green); border: 1px solid rgba(0,255,102,0.4); text-shadow: 0 0 4px rgba(0,255,102,0.3); }
+        .badge-expense { background-color: rgba(255,51,102,0.15); color: var(--danger-color); border: 1px solid rgba(255,51,102,0.4); text-shadow: 0 0 4px rgba(255,51,102,0.3); }
+
+        .btn-action { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px 4px; }
+        .btn-edit { color: var(--primary-blue); text-shadow: 0 0 4px rgba(0,243,255,0.4); }
+        .btn-delete { color: var(--danger-color); text-shadow: 0 0 4px rgba(255,51,102,0.4); }
+
+        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
+        .modal-content { background-color: var(--card-bg); margin: 10% auto; padding: 16px; border-radius: 10px; width: 90%; max-width: 450px; box-shadow: 0 0 20px rgba(0,243,255,0.3); border: 1px solid var(--primary-blue); color: var(--text-light); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: var(--primary-green); font-size: 14px; font-weight: 700; text-shadow: 0 0 6px rgba(0,255,102,0.4); }
+        .close-modal { background: none; border: none; font-size: 16px; cursor: pointer; color: var(--danger-color); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+        .btn-modal-save { background-color: var(--primary-green); color: #05080f; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; box-shadow: 0 0 8px rgba(0,255,102,0.4); }
+        .btn-modal-cancel { background-color: #1e293b; color: #94a3b8; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        
+        .toast { position: fixed; bottom: 20px; right: 20px; background-color: #0a1f18; border: 1px solid var(--primary-green); color: var(--primary-green); padding: 10px 16px; border-radius: 6px; box-shadow: 0 0 12px rgba(0,255,102,0.3); display: none; z-index: 1000; font-size: 12px; text-shadow: 0 0 4px rgba(0,255,102,0.3); }
+        
+        .filter-banner { display: none; background: rgba(0,243,255,0.1); border: 1px solid var(--primary-blue); padding: 6px 12px; border-radius: 6px; margin-bottom: 8px; font-size: 11px; font-weight: 600; color: var(--primary-blue); justify-content: space-between; align-items: center; text-shadow: 0 0 4px rgba(0,243,255,0.3); width: 100%; }
+        .filter-banner button { background: none; border: none; color: var(--danger-color); cursor: pointer; font-weight: bold; }
+
+        /* Light theme overrides for PDF generation */
+        .pdf-light-theme {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            padding: 10px !important;
+        }
+        .pdf-light-theme header {
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+        }
+        .pdf-light-theme .header-title h1 { color: #0f172a !important; text-shadow: none !important; }
+        .pdf-light-theme .header-title p { color: #475569 !important; text-shadow: none !important; }
+        .pdf-light-theme .card {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: none !important;
+        }
+        .pdf-light-theme .card h3 { color: #475569 !important; }
+        .pdf-light-theme .card:nth-child(1) .amount { color: #16a34a !important; text-shadow: none !important; }
+        .pdf-light-theme .card:nth-child(2) .amount { color: #dc2626 !important; text-shadow: none !important; }
+        .pdf-light-theme h2.section-title {
+            color: #1e293b !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            text-shadow: none !important;
+        }
+        .pdf-light-theme .table-responsive {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: none !important;
+        }
+        .pdf-light-theme table th {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            border-bottom: 2px solid #cbd5e1 !important;
+            text-shadow: none !important;
+        }
+        .pdf-light-theme table td {
+            color: #1e293b !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+        .pdf-light-theme .badge-income {
+            background-color: #dcfce7 !important;
+            color: #15803d !important;
+            border: 1px solid #86efac !important;
+            text-shadow: none !important;
+        }
+        .pdf-light-theme .badge-expense {
+            background-color: #ffe4e6 !important;
+            color: #b91c1c !important;
+            border: 1px solid #fca5a5 !important;
+            text-shadow: none !important;
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="reportArea">
+    <header>
+        <div class="logo-area">
+            <div class="logo-icon"><i class="fa-solid fa-wallet"></i></div>
+            <div class="header-title">
+                <h1>Financial Dashboard</h1>
+                <p id="headerSubtitle">Savings &amp; Card Usage</p>
+            </div>
+        </div>
+        <div class="header-sync-widget" data-html2canvas-ignore="true">
+            <span class="header-sync-label"><i class="fa-brands fa-github"></i> Auto Sync</span>
+            <label class="switch">
+                <input type="checkbox" id="gitAutoSyncToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </header>
+
+    <div class="top-widgets-row" data-html2canvas-ignore="true">
+        <!-- Digital Clock Box -->
+        <div class="widget-box clock-widget">
+            <div id="digitalClock">09:50:34 AM</div>
+            <div id="digitalDateWeek">Wed, 11 Nov 2026</div>
+        </div>
+
+        <!-- Add New Account Button -->
+        <div class="widget-box">
+            <button class="widget-action-btn" id="toggleAddAccBtn">
+                <i class="fa-solid fa-plus-circle"></i> Add Account
+            </button>
+        </div>
+    </div>
+
+    <div class="master-layout">
+        <div class="sticky-sidebar" data-html2canvas-ignore="true">
+            <!-- Filter Panel: Month and Year side-by-side 50-50 -->
+            <div class="control-panel">
+                <div class="filter-grid-row">
+                    <div class="control-box">
+                        <label for="filterMonth"><i class="fa-solid fa-calendar-days"></i> Month</label>
+                        <select id="filterMonth">
+                            <option value="all">All Months</option>
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11" selected="">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    <div class="control-box">
+                        <label for="filterYear"><i class="fa-solid fa-calendar"></i> Year</label>
+                        <select id="filterYear">
+                            <option value="2025">2025</option>
+                            <option value="2026" selected="">2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="new-acc-card" id="newAccCard">
+                <h4><i class="fa-solid fa-folder-plus"></i> New Account / Card</h4>
+                <form id="newAccForm">
+                    <div class="acc-form-grid">
+                        <div class="form-group">
+                            <label for="newAccName">Name</label>
+                            <input type="text" id="newAccName" placeholder="e.g. HDFC Bank" required="">
+                        </div>
+                        <div class="form-group">
+                            <label for="newAccType">Type</label>
+                            <select id="newAccType">
+                                <option value="Savings">Savings Account</option>
+                                <option value="Credit Card">Credit Card</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="limitGroup" style="display: none;">
+                            <label for="newAccLimit">Credit Limit (₹)</label>
+                            <input type="number" step="0.01" id="newAccLimit" placeholder="0.00">
+                        </div>
+                        <div class="form-group" style="margin-top: 4px;">
+                            <button type="submit" class="btn-submit"><i class="fa-solid fa-plus"></i> Create Account</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="form-container">
+                <h3><i class="fa-solid fa-plus-circle" style="color: var(--primary-blue);"></i> Add Income / Expense</h3>
+                <form id="addForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="transDate">Date</label>
+                            <input type="date" id="transDate" required="">
+                        </div>
+                        <div class="form-group">
+                            <label for="transDesc">Description</label>
+                            <input type="text" id="transDesc" placeholder="e.g. Grocery, Fuel" required="">
+                        </div>
+                        <div class="form-group">
+                            <label for="transCat">Type</label>
+                            <select id="transCat">
+                                <option value="Expense" selected="">Expense</option>
+                                <option value="Income">Income</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="transAcc">Account / Card</label>
+                            <select id="transAcc" class="acc-dropdown-options"><option value="AXIS Credit Card">AXIS Credit Card</option><option value="Bank Of India">Bank Of India</option><option value="HPCL ICICI">HPCL ICICI</option><option value="ICICI">ICICI</option><option value="ICICI Credit Card">ICICI Credit Card</option><option value="RBL Credit Card">RBL Credit Card</option><option value="SBI">SBI</option><option value="SBI Credit Card">SBI Credit Card</option><option value="Slice Credit Card">Slice Credit Card</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="transAmount">Amount (₹)</label>
+                            <input type="number" step="0.01" id="transAmount" placeholder="0.00" required="">
+                        </div>
+                        <div class="form-group" style="margin-top: 3px;">
+                            <button type="submit" class="btn-submit"><i class="fa-solid fa-check"></i> Add Transaction</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="export-actions">
+                <button class="btn-export btn-save" id="btnSaveData" title="Save HTML"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+                <button class="btn-export btn-pdf" id="btnExportPdf" title="Export PDF"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                <button class="btn-export btn-excel" id="btnExportExcel" title="Export Excel"><i class="fa-solid fa-file-excel"></i> Excel</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="summary-grid">
+                <div class="card">
+                    <h3>Total Savings Balance</h3>
+                    <div class="amount" id="totalSavingsDisplay">₹ 3,503.76</div>
+                </div>
+                <div class="card">
+                    <h3>Total Credit Card Due</h3>
+                    <div class="amount" id="totalCreditDisplay">₹ 7,329.10</div>
+                </div>
+            </div>
+
+            <div class="filter-banner" id="accountFilterBanner">
+                <span><i class="fa-solid filter-icon"></i> Account Filter Active: <strong id="activeFilteredAcc">None</strong></span>
+                <button id="clearAccountFilter">Clear Filter</button>
+            </div>
+
+            <h2 class="section-title"><i class="fa-solid fa-building-columns"></i> 1. Savings Account Balance (Click to filter)</h2>
+            <div class="table-responsive">
+                <table id="savingsTable">
+                    <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th>Inflow (₹)</th>
+                            <th>Outflow (₹)</th>
+                            <th>Balance (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="savingsBody">
+
+                        <tr data-acc="Bank Of India" data-initial="0.00" class="clickable-row">
+                            <td>Bank Of India</td>
+                            <td class="acc-inflow">63601.98</td>
+                            <td class="acc-outflow">63598.22</td>
+                            <td class="acc-balance">3.76</td>
+                        </tr>
+                        <tr data-acc="SBI" data-initial="0.00" class="clickable-row">
+                            <td>SBI</td>
+                            <td class="acc-inflow">2500.00</td>
+                            <td class="acc-outflow">0.00</td>
+                            <td class="acc-balance">2500.00</td>
+                        </tr>
+                        <tr data-acc="ICICI" data-initial="0.00" class="clickable-row">
+                            <td>ICICI</td>
+                            <td class="acc-inflow">1000.00</td>
+                            <td class="acc-outflow">0.00</td>
+                            <td class="acc-balance">1000.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 class="section-title"><i class="fa-solid fa-credit-card"></i> 2. Credit Card Status (Click to filter)</h2>
+            <div class="table-responsive">
+                <table id="creditCardTable">
+                    <thead>
+                        <tr>
+                            <th>Card Name</th>
+                            <th>Limit (₹)</th>
+                            <th>Total Due (₹)</th>
+                            <th>Available (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="creditCardBody">
+
+                        <tr data-card="SBI Credit Card" data-limit="80000.00" class="clickable-row">
+                            <td>SBI Credit Card</td>
+                            <td>80000.00</td>
+                            <td class="card-due">2954.20</td>
+                            <td class="card-avail">77045.80</td>
+                        </tr>
+                        <tr data-card="ICICI Credit Card" data-limit="60000.00" class="clickable-row">
+                            <td>ICICI Credit Card</td>
+                            <td>60000.00</td>
+                            <td class="card-due">1000.00</td>
+                            <td class="card-avail">59000.00</td>
+                        </tr>
+                        <tr data-card="RBL Credit Card" data-limit="170000.00" class="clickable-row">
+                            <td>RBL Credit Card</td>
+                            <td>170000.00</td>
+                            <td class="card-due">0.00</td>
+                            <td class="card-avail">170000.00</td>
+                        </tr>
+                        <tr data-card="AXIS Credit Card" data-limit="30000.00" class="clickable-row">
+                            <td>AXIS Credit Card</td>
+                            <td>30000.00</td>
+                            <td class="card-due">0.00</td>
+                            <td class="card-avail">30000.00</td>
+                        </tr>
+                        <tr data-card="Slice Credit Card" data-limit="10000.00" class="clickable-row">
+                            <td>Slice Credit Card</td>
+                            <td>10000.00</td>
+                            <td class="card-due">2139.00</td>
+                            <td class="card-avail">7861.00</td>
+                        </tr>
+                        <tr data-card="HPCL ICICI" data-limit="10000.00" class="clickable-row">
+                            <td>HPCL ICICI</td>
+                            <td>10000.00</td>
+                            <td class="card-due">1235.90</td>
+                            <td class="card-avail">8764.10</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 class="section-title"><i class="fa-solid fa-list-check"></i> 3. Transactions (Newest first)</h2>
+            <div class="table-responsive">
+                <table id="transactionTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Account / Card</th>
+                            <th>Amount (₹)</th>
+                            <th data-html2canvas-ignore="true" class="action-col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionBody">
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                    <tr data-amt="68.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-10">
+                    <td>10-11-2026</td>
+                    <td>Grocery</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">68.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="567.95" data-cat="Expense" data-acc="HPCL ICICI" data-date="2026-11-10">
+                    <td>10-11-2026</td>
+                    <td>Petrol</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>HPCL ICICI</td>
+                    <td class="tx-amt">567.95</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="330.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-10">
+                    <td>10-11-2026</td>
+                    <td>Grocery</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">330.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="321.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-10">
+                    <td>10-11-2026</td>
+                    <td>Grocery</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">321.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="370.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-08">
+                    <td>08-11-2026</td>
+                    <td>Grocery</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">370.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="100.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-06">
+                    <td>06-11-2026</td>
+                    <td>Food</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">100.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="10000.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-06">
+                    <td>06-11-2026</td>
+                    <td>Home Loan</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">10000.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="42.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-06">
+                    <td>06-11-2026</td>
+                    <td>Tea</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">42.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="9980.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-05">
+                    <td>05-11-2026</td>
+                    <td>ICICI Repay</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">9980.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="10000.00" data-cat="Income" data-acc="ICICI Credit Card" data-date="2026-11-05">
+                    <td>05-11-2026</td>
+                    <td>ICICI Repay</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>ICICI Credit Card</td>
+                    <td class="tx-amt">10000.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="500.00" data-cat="Expense" data-acc="ICICI Credit Card" data-date="2026-11-05">
+                    <td>05-11-2026</td>
+                    <td>CAU</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>ICICI Credit Card</td>
+                    <td class="tx-amt">500.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="91.00" data-cat="Income" data-acc="Bank Of India" data-date="2026-11-05">
+                    <td>05-11-2026</td>
+                    <td>Excess</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">91.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="5000.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-05">
+                    <td>05-11-2026</td>
+                    <td>Home Loan</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">5000.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="750.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-05">
+                    <td>05-11-2026</td>
+                    <td>Solar</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">750.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="750.00" data-cat="Income" data-acc="SBI" data-date="2026-11-05">
+                    <td>05-11-2026</td>
+                    <td>Solar</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>SBI</td>
+                    <td class="tx-amt">750.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="112.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-05">
+                    <td>05-11-2026</td>
+                    <td>Grocery</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">112.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="567.95" data-cat="Expense" data-acc="HPCL ICICI" data-date="2026-11-05">
+                    <td>05-11-2026</td>
+                    <td>Petrol</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>HPCL ICICI</td>
+                    <td class="tx-amt">567.95</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="500.00" data-cat="Expense" data-acc="ICICI Credit Card" data-date="2026-11-04">
+                    <td>04-11-2026</td>
+                    <td>CAU</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>ICICI Credit Card</td>
+                    <td class="tx-amt">500.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="500.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-04">
+                    <td>04-11-2026</td>
+                    <td>Flower</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">500.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="500.00" data-cat="Income" data-acc="Bank Of India" data-date="2026-11-04">
+                    <td>04-11-2026</td>
+                    <td>Flower</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">500.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="35.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-04">
+                    <td>04-11-2026</td>
+                    <td>Food</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">35.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="434.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-04">
+                    <td>04-11-2026</td>
+                    <td>Milk</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">434.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="9975.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-04">
+                    <td>04-11-2026</td>
+                    <td>ICICI Repay</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">9975.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="10000.00" data-cat="Income" data-acc="ICICI Credit Card" data-date="2026-11-04">
+                    <td>04-11-2026</td>
+                    <td>ICICI Repay</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>ICICI Credit Card</td>
+                    <td class="tx-amt">10000.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="2213.22" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-04">
+                    <td>04-11-2026</td>
+                    <td>Mobile Installment</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">2213.22</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="115.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-04">
+                    <td>04-11-2026</td>
+                    <td>KSEB</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">115.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="95.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-03">
+                    <td>03-11-2026</td>
+                    <td>Grocery</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">95.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="500.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-03">
+                    <td>03-11-2026</td>
+                    <td>ATS</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">500.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="200.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-03">
+                    <td>03-11-2026</td>
+                    <td>Hospital</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">200.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="143.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-03">
+                    <td>03-11-2026</td>
+                    <td>Medicine</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">143.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="200.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-03">
+                    <td>03-11-2026</td>
+                    <td>Food</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">200.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="100.00" data-cat="Expense" data-acc="HPCL ICICI" data-date="2026-11-03">
+                    <td>03-11-2026</td>
+                    <td>Petrol</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>HPCL ICICI</td>
+                    <td class="tx-amt">100.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="19886.98" data-cat="Income" data-acc="Bank Of India" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Previous</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">19886.98</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="1750.00" data-cat="Income" data-acc="SBI" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Previous</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>SBI</td>
+                    <td class="tx-amt">1750.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="1000.00" data-cat="Income" data-acc="ICICI" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Previous</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>ICICI</td>
+                    <td class="tx-amt">1000.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="43124.00" data-cat="Income" data-acc="Bank Of India" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Salary</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">43124.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="22.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Tea</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">22.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="178.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Vegetable</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">178.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="2954.20" data-cat="Expense" data-acc="SBI Credit Card" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>SBI Credit Card</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>SBI Credit Card</td>
+                    <td class="tx-amt">2954.20</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="30000.00" data-cat="Expense" data-acc="ICICI Credit Card" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>ICICI Credit Card</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>ICICI Credit Card</td>
+                    <td class="tx-amt">30000.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="4054.00" data-cat="Expense" data-acc="Slice Credit Card" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Slice Credit Card</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">4054.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="4232.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Slice Repay</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">4232.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="4232.00" data-cat="Income" data-acc="Slice Credit Card" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Slice Repay</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>Slice Credit Card</td>
+                    <td class="tx-amt">4232.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="10000.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>Police Society</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">10000.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="10000.00" data-cat="Expense" data-acc="Bank Of India" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>ICICI Repay</td>
+                    <td><span class="badge badge-expense">Expense</span></td>
+                    <td>Bank Of India</td>
+                    <td class="tx-amt">10000.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr><tr data-amt="10000.00" data-cat="Income" data-acc="ICICI Credit Card" data-date="2026-11-02">
+                    <td>02-11-2026</td>
+                    <td>ICICI Repay</td>
+                    <td><span class="badge badge-income">Income</span></td>
+                    <td>ICICI Credit Card</td>
+                    <td class="tx-amt">10000.00</td>
+                    <td data-html2canvas-ignore="true" class="action-col">
+                        <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="editModal" class="modal" data-html2canvas-ignore="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span><i class="fa-solid fa-pen-to-square"></i> Edit Transaction</span>
+            <button class="close-modal" id="closeModalBtn">×</button>
+        </div>
+        <form id="editForm">
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="editDate">Date</label>
+                <input type="date" id="editDate" required="">
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="editDesc">Description</label>
+                <input type="text" id="editDesc" required="">
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="editCat">Type</label>
+                <select id="editCat">
+                    <option value="Expense">Expense</option>
+                    <option value="Income">Income</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="editAcc">Account / Card</label>
+                <select id="editAcc" class="acc-dropdown-options"><option value="AXIS Credit Card">AXIS Credit Card</option><option value="Bank Of India">Bank Of India</option><option value="HPCL ICICI">HPCL ICICI</option><option value="ICICI">ICICI</option><option value="ICICI Credit Card">ICICI Credit Card</option><option value="RBL Credit Card">RBL Credit Card</option><option value="SBI">SBI</option><option value="SBI Credit Card">SBI Credit Card</option><option value="Slice Credit Card">Slice Credit Card</option></select>
+            </div>
+            <div class="form-group" style="margin-bottom: 10px;">
+                <label for="editAmount">Amount (₹)</label>
+                <input type="number" step="0.01" id="editAmount" required="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" id="cancelModalBtn">Cancel</button>
+                <button type="submit" class="btn-modal-save">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="toast" id="toastMsg"><i class="fa-solid fa-check-circle"></i> Changes saved successfully!</div>
+
+<script>
+    let currentEditingRow = null;
+    let selectedAccountFilter = null;
+
+    function startClock() {
+        function updateClock() {
+            var now = new Date();
+            var hours = now.getHours();
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+            var seconds = String(now.getSeconds()).padStart(2, '0');
+            var ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            var timeStr = String(hours).padStart(2, '0') + ':' + minutes + ':' + seconds + ' ' + ampm;
+
+            var daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            var monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            var dayName = daysShort[now.getDay()];
+            var dateNum = now.getDate();
+            var monthName = monthsShort[now.getMonth()];
+            var yearNum = now.getFullYear();
+
+            var clockEl = document.getElementById('digitalClock');
+            var dateWeekEl = document.getElementById('digitalDateWeek');
+            if(clockEl) clockEl.innerHTML = timeStr;
+            if(dateWeekEl) dateWeekEl.innerHTML = dayName + ', ' + dateNum + ' ' + monthName + ' ' + yearNum;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+    }
+
+    startClock();
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setTodayDate();
+        loadSavedData();
+        updateAllDropdowns();
+        sortTransactionRows();
+        applyFiltersAndRecalculate();
+
+        document.getElementById('filterMonth').addEventListener('change', applyFiltersAndRecalculate);
+        document.getElementById('filterYear').addEventListener('change', applyFiltersAndRecalculate);
+
+        let autoSyncCheckbox = document.getElementById('gitAutoSyncToggle');
+        let savedSyncState = localStorage.getItem('git_autosync_enabled');
+        if (savedSyncState === 'true') {
+            autoSyncCheckbox.checked = true;
+        }
+
+        autoSyncCheckbox.addEventListener('change', function() {
+            localStorage.setItem('git_autosync_enabled', this.checked);
+            if (this.checked) {
+                showCustomToast('GitHub Auto-Sync Enabled!');
+            } else {
+                showCustomToast('GitHub Auto-Sync Disabled!');
+            }
+        });
+
+        document.getElementById('toggleAddAccBtn').addEventListener('click', function() {
+            let card = document.getElementById('newAccCard');
+            card.style.display = (card.style.display === 'block') ? 'none' : 'block';
+        });
+
+        document.getElementById('newAccType').addEventListener('change', function() {
+            let limitGrp = document.getElementById('limitGroup');
+            if (this.value === 'Credit Card') {
+                limitGrp.style.display = 'flex';
+                document.getElementById('newAccLimit').setAttribute('required', 'true');
+            } else {
+                limitGrp.style.display = 'none';
+                document.getElementById('newAccLimit').removeAttribute('required');
+            }
+        });
+
+        document.getElementById('newAccForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let name = document.getElementById('newAccName').value.trim();
+            let type = document.getElementById('newAccType').value;
+            let limit = parseFloat(document.getElementById('newAccLimit').value || 0).toFixed(2);
+            if (!name) return;
+
+            if (type === 'Savings') {
+                let tbody = document.getElementById('savingsBody');
+                let exists = Array.from(tbody.querySelectorAll('tr')).some(tr => (tr.getAttribute('data-acc') || "").toLowerCase() === name.toLowerCase());
+                if (!exists) {
+                    let tr = document.createElement('tr');
+                    tr.setAttribute('data-acc', name);
+                    tr.setAttribute('data-initial', '0.00');
+                    tr.className = 'clickable-row';
+                    tr.innerHTML = `<td>${name}</td><td class="acc-inflow">0.00</td><td class="acc-outflow">0.00</td><td class="acc-balance">0.00</td>`;
+                    tbody.appendChild(tr);
+                }
+            } else {
+                let tbody = document.getElementById('creditCardBody');
+                let exists = Array.from(tbody.querySelectorAll('tr')).some(tr => (tr.getAttribute('data-card') || "").toLowerCase() === name.toLowerCase());
+                if (!exists) {
+                    let tr = document.createElement('tr');
+                    tr.setAttribute('data-card', name);
+                    tr.setAttribute('data-limit', limit);
+                    tr.className = 'clickable-row';
+                    tr.innerHTML = `<td>${name}</td><td>${limit}</td><td class="card-due">0.00</td><td class="card-avail">${limit}</td>`;
+                    tbody.appendChild(tr);
+                }
+            }
+            updateAllDropdowns();
+            applyFiltersAndRecalculate();
+            saveToLocalStorage();
+            document.getElementById('newAccForm').reset();
+            document.getElementById('newAccCard').style.display = 'none';
+            showCustomToast('New Account Added Successfully!');
+        });
+
+        document.getElementById('addForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let dateVal = document.getElementById('transDate').value;
+            let desc = document.getElementById('transDesc').value;
+            let cat = document.getElementById('transCat').value;
+            let acc = document.getElementById('transAcc').value;
+            let amount = parseFloat(document.getElementById('transAmount').value || 0).toFixed(2);
+
+            let tableBody = document.getElementById('transactionBody');
+            let newRow = document.createElement('tr');
+            let badgeClass = cat === 'Income' ? 'badge-income' : 'badge-expense';
+            let formattedDate = dateVal.split('-').reverse().join('-');
+
+            newRow.setAttribute('data-amt', amount);
+            newRow.setAttribute('data-cat', cat);
+            newRow.setAttribute('data-acc', acc);
+            newRow.setAttribute('data-date', dateVal);
+
+            newRow.innerHTML = `
+                <td>${formattedDate}</td>
+                <td>${desc}</td>
+                <td><span class="badge ${badgeClass}">${cat}</span></td>
+                <td>${acc}</td>
+                <td class="tx-amt">${amount}</td>
+                <td data-html2canvas-ignore="true" class="action-col">
+                    <button class="btn-action btn-edit edit-tx" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="btn-action btn-delete delete-row" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            `;
+            tableBody.prepend(newRow);
+            sortTransactionRows();
+            document.getElementById('addForm').reset();
+            setTodayDate();
+            applyFiltersAndRecalculate();
+            saveToLocalStorage();
+            showCustomToast('Transaction Added Successfully!');
+        });
+
+        document.addEventListener('click', function(e) {
+            let row = e.target.closest('tr.clickable-row');
+            if (row) {
+                let accName = row.getAttribute('data-acc') || row.getAttribute('data-card');
+                if (accName) {
+                    selectedAccountFilter = accName;
+                    document.getElementById('activeFilteredAcc').innerText = accName;
+                    document.getElementById('accountFilterBanner').style.display = 'flex';
+                    applyFiltersAndRecalculate();
+                }
+            }
+
+            let btn = e.target.closest('button');
+            if (!btn) return;
+            if (btn.classList.contains('delete-row')) {
+                btn.closest('tr').remove();
+                applyFiltersAndRecalculate();
+                saveToLocalStorage();
+                showCustomToast('Transaction Deleted!');
+            } else if (btn.classList.contains('edit-tx')) {
+                openEditModal(btn.closest('tr'));
+            }
+        });
+
+        document.getElementById('clearAccountFilter').addEventListener('click', function() {
+            selectedAccountFilter = null;
+            document.getElementById('accountFilterBanner').style.display = 'none';
+            applyFiltersAndRecalculate();
+        });
+
+        document.getElementById('closeModalBtn').addEventListener('click', closeEditModal);
+        document.getElementById('cancelModalBtn').addEventListener('click', closeEditModal);
+
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!currentEditingRow) return;
+
+            let dateVal = document.getElementById('editDate').value;
+            let desc = document.getElementById('editDesc').value;
+            let cat = document.getElementById('editCat').value;
+            let acc = document.getElementById('editAcc').value;
+            let amount = parseFloat(document.getElementById('editAmount').value || 0).toFixed(2);
+
+            let formattedDate = dateVal.split('-').reverse().join('-');
+            let badgeClass = cat === 'Income' ? 'badge-income' : 'badge-expense';
+
+            currentEditingRow.setAttribute('data-amt', amount);
+            currentEditingRow.setAttribute('data-cat', cat);
+            currentEditingRow.setAttribute('data-acc', acc);
+            currentEditingRow.setAttribute('data-date', dateVal);
+
+            let tds = currentEditingRow.querySelectorAll('td');
+            tds[0].innerText = formattedDate;
+            tds[1].innerText = desc;
+            tds[2].innerHTML = `<span class="badge ${badgeClass}">${cat}</span>`;
+            tds[3].innerText = acc;
+            tds[4].innerText = amount;
+
+            sortTransactionRows();
+            applyFiltersAndRecalculate();
+            saveToLocalStorage();
+            closeEditModal();
+            showCustomToast('Transaction Updated!');
+        });
+
+        document.getElementById('btnSaveData').addEventListener('click', function() {
+            saveToLocalStorage();
+            downloadUpdatedHTML();
+            showToast();
+        });
+
+        document.getElementById('btnExportPdf').addEventListener('click', function() {
+            let element = document.getElementById('reportArea');
+            element.classList.add('pdf-light-theme');
+            
+            let opt = {
+                margin: [10, 10, 10, 10],
+                filename: 'Financial_Dashboard_Report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(function() {
+                element.classList.remove('pdf-light-theme');
+            }).catch(function(err) {
+                element.classList.remove('pdf-light-theme');
+            });
+        });
+
+        document.getElementById('btnExportExcel').addEventListener('click', async function() {
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Financial Summary');
+
+            // Set Page Setup for Perfect A4 Printing
+            worksheet.pageSetup.orientation = 'portrait';
+            worksheet.pageSetup.paperSize = 9; // A4
+            worksheet.pageSetup.fitToPage = true;
+            worksheet.pageSetup.fitToWidth = 1;
+            worksheet.pageSetup.fitToHeight = 0;
+            worksheet.views = [{ showGridLines: true }];
+
+            // Refined Elite Color Palette (Classic Navy & Cool Gray with Accent Borders)
+            const fontFamily = 'Segoe UI';
+            const primaryHeaderFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '0F172A' } }; // Deep Navy
+            const sectionBannerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F8FAFC' } }; // Soft Light Gray
+            const tableHeaderFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '1E293B' } };  // Slate Navy
+            const totalRowFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F1F5F9' } };       // Light Slate
+            
+            const thinBorder = {
+                top: { style: 'thin', color: { argb: 'E2E8F0' } },
+                left: { style: 'thin', color: { argb: 'E2E8F0' } },
+                bottom: { style: 'thin', color: { argb: 'E2E8F0' } },
+                right: { style: 'thin', color: { argb: 'E2E8F0' } }
+            };
+
+            const headerBorder = {
+                top: { style: 'thin', color: { argb: '0F172A' } },
+                left: { style: 'thin', color: { argb: '0F172A' } },
+                bottom: { style: 'medium', color: { argb: '0F172A' } },
+                right: { style: 'thin', color: { argb: '0F172A' } }
+            };
+
+            // 1. Title Banner (Merged A to E to match exact 5 columns)
+            worksheet.mergeCells('A1:E1');
+            const titleCell = worksheet.getCell('A1');
+            titleCell.value = 'FINANCIAL DASHBOARD REPORT';
+            titleCell.font = { name: fontFamily, size: 15, bold: true, color: { argb: 'FFFFFF' } };
+            titleCell.fill = primaryHeaderFill;
+            titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+            worksheet.getRow(1).height = 32;
+
+            // Date Sub-header
+            worksheet.mergeCells('A2:E2');
+            const dateCell = worksheet.getCell('A2');
+            dateCell.value = `Report Generated: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+            dateCell.font = { name: fontFamily, size: 9.5, italic: true, color: { argb: '64748B' } };
+            dateCell.alignment = { horizontal: 'center', vertical: 'middle' };
+            worksheet.getRow(2).height = 18;
+
+            worksheet.addRow([]); // Row 3 gap
+
+            // 2. Summary Overview Cards Section
+            worksheet.mergeCells('A4:E4');
+            const sumBanner = worksheet.getCell('A4');
+            sumBanner.value = 'SUMMARY OVERVIEW';
+            sumBanner.font = { name: fontFamily, size: 10.5, bold: true, color: { argb: '0F172A' } };
+            sumBanner.fill = sectionBannerFill;
+            sumBanner.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+            worksheet.getRow(4).height = 22;
+
+            const cardHeaderRow = worksheet.addRow(['Total Savings Balance', '', 'Total Credit Card Due', '', '']);
+            worksheet.mergeCells('A5:B5');
+            worksheet.mergeCells('C5:E5');
+            cardHeaderRow.font = { name: fontFamily, size: 9.5, bold: true, color: { argb: '475569' } };
+            cardHeaderRow.alignment = { horizontal: 'center', vertical: 'middle' };
+            worksheet.getRow(5).height = 18;
+
+            const cardValRow = worksheet.addRow([]);
+            worksheet.mergeCells('A6:B6');
+            worksheet.mergeCells('C6:E6');
+            worksheet.getRow(6).height = 25;
+
+            worksheet.addRow([]); // Row 7 gap
+
+            // 3. Savings Account Balance
+            worksheet.mergeCells('A8:E8');
+            const savBanner = worksheet.getCell('A8');
+            savBanner.value = '1. SAVINGS ACCOUNT BALANCE';
+            savBanner.font = { name: fontFamily, size: 10.5, bold: true, color: { argb: '0F172A' } };
+            savBanner.fill = sectionBannerFill;
+            savBanner.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+            worksheet.getRow(8).height = 22;
+
+            const savHeadRow = worksheet.addRow(['Account Name', 'Inflow (₹)', 'Outflow (₹)', 'Net Balance (₹)', '']);
+            worksheet.mergeCells('D9:E9');
+            savHeadRow.font = { name: fontFamily, size: 9.5, bold: true, color: { argb: '38BDF8' } }; // Modern Light Blue Accent on Dark Slate
+            savHeadRow.eachCell((cell, colNum) => {
+                if(colNum <= 4) {
+                    cell.fill = tableHeaderFill;
+                    cell.alignment = { horizontal: colNum === 1 ? 'left' : 'center', vertical: 'middle' };
+                    cell.border = headerBorder;
+                }
+            });
+            worksheet.getRow(9).height = 22;
+
+            let savStartRow = 10;
+            let savRows = document.querySelectorAll('#savingsBody tr');
+            savRows.forEach(tr => {
+                let tds = tr.querySelectorAll('td');
+                let accName = tds[0].innerText.trim();
+                let inf = parseFloat(tds[1].innerText || 0);
+                let out = parseFloat(tds[2].innerText || 0);
+                
+                let r = worksheet.addRow([accName, inf, out, { formula: `B${worksheet.rowCount + 1}-C${worksheet.rowCount + 1}` }, '']);
+                let currRowIdx = worksheet.rowCount;
+                worksheet.mergeCells(`D${currRowIdx}:E${currRowIdx}`);
+                
+                r.font = { name: fontFamily, size: 9.5 };
+                r.getCell(1).alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+                r.getCell(2).alignment = { horizontal: 'right', vertical: 'middle' };
+                r.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+                r.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
+                
+                r.getCell(2).numFmt = '#,##0.00';
+                r.getCell(3).numFmt = '#,##0.00';
+                r.getCell(4).numFmt = '#,##0.00';
+
+                for(let c = 1; c <= 4; c++) r.getCell(c).border = thinBorder;
+                worksheet.getRow(currRowIdx).height = 20;
+            });
+            let savEndRow = worksheet.rowCount;
+
+            // Savings Total Row
+            let savTotRow = worksheet.addRow([
+                'Total Savings',
+                { formula: `SUM(B${savStartRow}:B${savEndRow})` },
+                { formula: `SUM(C${savStartRow}:C${savEndRow})` },
+                { formula: `SUM(D${savStartRow}:D${savEndRow})` },
+                ''
+            ]);
+            let savTotIdx = worksheet.rowCount;
+            worksheet.mergeCells(`D${savTotIdx}:E${savTotIdx}`);
+            savTotRow.font = { name: fontFamily, size: 9.5, bold: true, color: { argb: '0F172A' } };
+            savTotRow.eachCell((cell, cIdx) => {
+                if(cIdx <= 4) {
+                    cell.fill = totalRowFill;
+                    cell.border = thinBorder;
+                    cell.alignment = { horizontal: cIdx === 1 ? 'left' : 'right', vertical: 'middle', indent: cIdx === 1 ? 1 : 0 };
+                    if(cIdx > 1) cell.numFmt = '₹ #,##0.00';
+                }
+            });
+            worksheet.getRow(savTotIdx).height = 22;
+
+            worksheet.addRow([]); // Gap
+
+            // 4. Credit Card Status Section
+            let crdHeaderLineIdx = worksheet.rowCount + 1;
+            worksheet.mergeCells(`A${crdHeaderLineIdx}:E${crdHeaderLineIdx}`);
+            const crdBanner = worksheet.getCell(`A${crdHeaderLineIdx}`);
+            crdBanner.value = '2. CREDIT CARD STATUS';
+            crdBanner.font = { name: fontFamily, size: 10.5, bold: true, color: { argb: '0F172A' } };
+            crdBanner.fill = sectionBannerFill;
+            crdBanner.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+            worksheet.getRow(crdHeaderLineIdx).height = 22;
+
+            const crdHeadRow = worksheet.addRow(['Card Name', 'Credit Limit (₹)', 'Total Due (₹)', 'Available Limit (₹)', '']);
+            let crdHeadIdx = worksheet.rowCount;
+            worksheet.mergeCells(`D${crdHeadIdx}:E${crdHeadIdx}`);
+            crdHeadRow.font = { name: fontFamily, size: 9.5, bold: true, color: { argb: '38BDF8' } };
+            crdHeadRow.eachCell((cell, colNum) => {
+                if(colNum <= 4) {
+                    cell.fill = tableHeaderFill;
+                    cell.alignment = { horizontal: colNum === 1 ? 'left' : 'center', vertical: 'middle' };
+                    cell.border = headerBorder;
+                }
+            });
+            worksheet.getRow(crdHeadIdx).height = 22;
+
+            let crdStartRow = worksheet.rowCount + 1;
+            let crdRows = document.querySelectorAll('#creditCardBody tr');
+            crdRows.forEach(tr => {
+                let tds = tr.querySelectorAll('td');
+                let cardName = tds[0].innerText.trim();
+                let limit = parseFloat(tds[1].innerText || 0);
+                let due = parseFloat(tds[2].innerText || 0);
+
+                let r = worksheet.addRow([cardName, limit, due, { formula: `B${worksheet.rowCount + 1}-C${worksheet.rowCount + 1}` }, '']);
+                let currRowIdx = worksheet.rowCount;
+                worksheet.mergeCells(`D${currRowIdx}:E${currRowIdx}`);
+
+                r.font = { name: fontFamily, size: 9.5 };
+                r.getCell(1).alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+                r.getCell(2).alignment = { horizontal: 'right', vertical: 'middle' };
+                r.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+                r.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
+
+                r.getCell(2).numFmt = '#,##0.00';
+                r.getCell(3).numFmt = '#,##0.00';
+                r.getCell(4).numFmt = '#,##0.00';
+
+                for(let c = 1; c <= 4; c++) r.getCell(c).border = thinBorder;
+                worksheet.getRow(currRowIdx).height = 20;
+            });
+            let crdEndRow = worksheet.rowCount;
+
+            // Credit Cards Total Row
+            let crdTotRow = worksheet.addRow([
+                'Total Credit Cards',
+                { formula: `SUM(B${crdStartRow}:B${crdEndRow})` },
+                { formula: `SUM(C${crdStartRow}:C${crdEndRow})` },
+                { formula: `SUM(D${crdStartRow}:D${crdEndRow})` },
+                ''
+            ]);
+            let crdTotIdx = worksheet.rowCount;
+            worksheet.mergeCells(`D${crdTotIdx}:E${crdTotIdx}`);
+            crdTotRow.font = { name: fontFamily, size: 9.5, bold: true, color: { argb: '0F172A' } };
+            crdTotRow.eachCell((cell, cIdx) => {
+                if(cIdx <= 4) {
+                    cell.fill = totalRowFill;
+                    cell.border = thinBorder;
+                    cell.alignment = { horizontal: cIdx === 1 ? 'left' : 'right', vertical: 'middle', indent: cIdx === 1 ? 1 : 0 };
+                    if(cIdx > 1) cell.numFmt = '₹ #,##0.00';
+                }
+            });
+            worksheet.getRow(crdTotIdx).height = 22;
+
+            // Set Card Formulas on Top Card Summary Overview (Row 6)
+            let cellA6 = worksheet.getCell('A6');
+            cellA6.value = { formula: `D${savTotIdx}` };
+            cellA6.font = { name: fontFamily, size: 13, bold: true, color: { argb: '16A34A' } };
+            cellA6.alignment = { horizontal: 'center', vertical: 'middle' };
+            cellA6.numFmt = '₹ #,##0.00';
+
+            let cellC6 = worksheet.getCell('C6');
+            cellC6.value = { formula: `C${crdTotIdx}` };
+            cellC6.font = { name: fontFamily, size: 13, bold: true, color: { argb: 'DC2626' } };
+            cellC6.alignment = { horizontal: 'center', vertical: 'middle' };
+            cellC6.numFmt = '₹ #,##0.00';
+
+            worksheet.addRow([]); // Gap
+
+            // 5. Detailed Transactions Section (5 Clean Columns)
+            let txBannerIdx = worksheet.rowCount + 1;
+            worksheet.mergeCells(`A${txBannerIdx}:E${txBannerIdx}`);
+            const txBanner = worksheet.getCell(`A${txBannerIdx}`);
+            txBanner.value = '3. TRANSACTIONS LIST';
+            txBanner.font = { name: fontFamily, size: 10.5, bold: true, color: { argb: '0F172A' } };
+            txBanner.fill = sectionBannerFill;
+            txBanner.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+            worksheet.getRow(txBannerIdx).height = 22;
+
+            const txHeadRow = worksheet.addRow(['Date', 'Description', 'Type', 'Account / Card', 'Amount (₹)']);
+            txHeadRow.font = { name: fontFamily, size: 9.5, bold: true, color: { argb: '38BDF8' } };
+            txHeadRow.eachCell((cell, colNum) => {
+                cell.fill = tableHeaderFill;
+                cell.alignment = { horizontal: (colNum === 2 || colNum === 4) ? 'left' : 'center', vertical: 'middle' };
+                cell.border = headerBorder;
+            });
+            worksheet.getRow(worksheet.rowCount).height = 22;
+
+            let txStartRow = worksheet.rowCount + 1;
+            let txRows = document.querySelectorAll('#transactionBody tr');
+            let visibleCount = 0;
+
+            txRows.forEach(tr => {
+                if(tr.style.display !== 'none') {
+                    let tds = tr.querySelectorAll('td');
+                    let dt = tds[0].innerText.trim();
+                    let desc = tds[1].innerText.trim();
+                    let type = tds[2].innerText.trim();
+                    let acc = tds[3].innerText.trim();
+                    let amt = parseFloat(tds[4].innerText || 0);
+
+                    let r = worksheet.addRow([dt, desc, type, acc, amt]);
+                    let currRowIdx = worksheet.rowCount;
+
+                    r.font = { name: fontFamily, size: 9.5 };
+                    r.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+                    r.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+                    r.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+                    r.getCell(4).alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+                    r.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
+
+                    if (type.toLowerCase() === 'income') {
+                        r.getCell(3).font = { name: fontFamily, size: 9.5, bold: true, color: { argb: '16A34A' } };
+                    } else {
+                        r.getCell(3).font = { name: fontFamily, size: 9.5, bold: true, color: { argb: 'DC2626' } };
+                    }
+
+                    r.getCell(5).numFmt = '#,##0.00';
+                    for(let c = 1; c <= 5; c++) r.getCell(c).border = thinBorder;
+                    worksheet.getRow(currRowIdx).height = 20;
+                    visibleCount++;
+                }
+            });
+
+            if (visibleCount > 0) {
+                let txEndRow = worksheet.rowCount;
+                let txTotRow = worksheet.addRow(['Total Transaction Amount', '', '', '', { formula: `SUM(E${txStartRow}:E${txEndRow})` }]);
+                let txTotIdx = worksheet.rowCount;
+                worksheet.mergeCells(`A${txTotIdx}:D${txTotIdx}`);
+                txTotRow.font = { name: fontFamily, size: 9.5, bold: true, color: { argb: '0F172A' } };
+                txTotRow.eachCell((cell, cIdx) => {
+                    cell.fill = totalRowFill;
+                    cell.border = thinBorder;
+                    if(cIdx === 1) cell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+                    if(cIdx === 5) {
+                        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                        cell.numFmt = '₹ #,##0.00';
+                    }
+                });
+                worksheet.getRow(txTotIdx).height = 22;
+            }
+
+            // Standardize Column Widths (Exact 5 Column Layout for A4 Portrait Fit)
+            worksheet.columns = [
+                { width: 16 }, // A: Date / Account Name / Card Name
+                { width: 28 }, // B: Description / Inflow / Limit
+                { width: 18 }, // C: Type / Outflow / Due
+                { width: 25 }, // D: Account / Card / Balance / Available
+                { width: 20 }  // E: Amount
+            ];
+
+            // Generate and Download Excel File
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Financial_Dashboard_Styled_Report.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            showCustomToast('Styled Excel Report Downloaded Successfully!');
+        });
+    });
+
+    function setTodayDate() {
+        let today = new Date();
+        let yyyy = today.getFullYear();
+        let mm = String(today.getMonth() + 1).padStart(2, '0');
+        let dd = String(today.getDate()).padStart(2, '0');
+        document.getElementById('transDate').value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    function updateAllDropdowns() {
+        let accList = [];
+        document.querySelectorAll('#savingsBody tr').forEach(tr => {
+            let name = tr.getAttribute('data-acc') || tr.querySelectorAll('td')[0].innerText.trim();
+            if (name && !accList.includes(name)) accList.push(name);
+        });
+        document.querySelectorAll('#creditCardBody tr').forEach(tr => {
+            let name = tr.getAttribute('data-card') || tr.querySelectorAll('td')[0].innerText.trim();
+            if (name && !accList.includes(name)) accList.push(name);
+        });
+        accList.sort();
+
+        let dropdowns = document.querySelectorAll('.acc-dropdown-options');
+        dropdowns.forEach(sel => {
+            let currentVal = sel.value;
+            sel.innerHTML = '';
+            accList.forEach(acc => {
+                let opt = document.createElement('option');
+                opt.value = acc;
+                opt.innerText = acc;
+                sel.appendChild(opt);
+            });
+            if (accList.includes(currentVal)) sel.value = currentVal;
+        });
+    }
+
+    function openEditModal(tr) {
+        currentEditingRow = tr;
+        updateAllDropdowns();
+        let tds = tr.querySelectorAll('td');
+        let rawDate = tr.getAttribute('data-date');
+        if (!rawDate) {
+            let parts = tds[0].innerText.trim().split('-');
+            if (parts.length === 3) rawDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        document.getElementById('editDate').value = rawDate || '';
+        document.getElementById('editDesc').value = tds[1].innerText.trim();
+        document.getElementById('editCat').value = tds[2].innerText.includes('Income') ? 'Income' : 'Expense';
+        document.getElementById('editAcc').value = tds[3].innerText.trim();
+        document.getElementById('editAmount').value = tds[4].innerText.trim();
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+        currentEditingRow = null;
+    }
+
+    function sortTransactionRows() {
+        let tbody = document.getElementById('transactionBody');
+        let rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort((a, b) => {
+            let dateA = a.getAttribute('data-date') || '';
+            let dateB = b.getAttribute('data-date') || '';
+            if (!dateA || !dateB) {
+                let partsA = a.querySelectorAll('td')[0].innerText.trim().split('-');
+                let partsB = b.querySelectorAll('td')[0].innerText.trim().split('-');
+                if (partsA.length === 3) dateA = `${partsA[2]}-${partsA[1]}-${partsA[0]}`;
+                if (partsB.length === 3) dateB = `${partsB[2]}-${partsB[1]}-${partsB[0]}`;
+            }
+            return dateB.localeCompare(dateA);
+        });
+        rows.forEach(r => tbody.appendChild(r));
+    }
+
+    function applyFiltersAndRecalculate() {
+        let selectedMonth = document.getElementById('filterMonth').value;
+        let selectedYear = document.getElementById('filterYear').value;
+        let txRows = document.querySelectorAll('#transactionBody tr');
+        
+        let priorCardExp = {};
+        let priorCardInc = {};
+        let priorSavingsInf = {};
+        let priorSavingsOut = {};
+
+        document.querySelectorAll('#savingsBody tr').forEach(tr => {
+            let acc = (tr.getAttribute('data-acc') || tr.querySelectorAll('td')[0].innerText.trim()).toLowerCase();
+            priorSavingsInf[acc] = 0;
+            priorSavingsOut[acc] = 0;
+        });
+        document.querySelectorAll('#creditCardBody tr').forEach(tr => {
+            let card = (tr.getAttribute('data-card') || tr.querySelectorAll('td')[0].innerText.trim()).toLowerCase();
+            priorCardExp[card] = 0;
+            priorCardInc[card] = 0;
+        });
+
+        txRows.forEach(tr => {
+            let dateStr = tr.getAttribute('data-date');
+            if (!dateStr) {
+                let parts = tr.querySelectorAll('td')[0].innerText.trim().split('-');
+                if (parts.length === 3) dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            if (!dateStr) return;
+
+            let cat = tr.getAttribute('data-cat') || (tr.querySelectorAll('td')[2].innerText.includes('Income') ? 'Income' : 'Expense');
+            let acc = (tr.getAttribute('data-acc') || tr.querySelectorAll('td')[3].innerText).trim().toLowerCase();
+            let amt = parseFloat(tr.getAttribute('data-amt') || tr.querySelectorAll('td')[4].innerText || 0);
+
+            let isBeforeCurrentFilter = false;
+            if (selectedYear !== 'all') {
+                if (selectedMonth !== 'all') {
+                    let filterPrefix = selectedYear + '-' + selectedMonth;
+                    if (dateStr.substring(0, 7) < filterPrefix) isBeforeCurrentFilter = true;
+                } else {
+                    let filterYearPrefix = selectedYear;
+                    if (dateStr.substring(0, 4) < filterYearPrefix) isBeforeCurrentFilter = true;
+                }
+            }
+
+            if (isBeforeCurrentFilter) {
+                if (priorSavingsInf[acc] !== undefined) {
+                    if (cat === 'Income') priorSavingsInf[acc] += amt;
+                    else priorSavingsOut[acc] += amt;
+                }
+                if (priorCardExp[acc] !== undefined) {
+                    if (cat === 'Expense') priorCardExp[acc] += amt;
+                    else if (cat === 'Income') priorCardInc[acc] += amt;
+                }
+            }
+        });
+
+        let curSavingsInf = {};
+        let curSavingsOut = {};
+        let curCardExp = {};
+        let curCardInc = {};
+
+        document.querySelectorAll('#savingsBody tr').forEach(tr => {
+            let acc = (tr.getAttribute('data-acc') || tr.querySelectorAll('td')[0].innerText.trim()).toLowerCase();
+            curSavingsInf[acc] = priorSavingsInf[acc] || 0;
+            curSavingsOut[acc] = priorSavingsOut[acc] || 0;
+        });
+        document.querySelectorAll('#creditCardBody tr').forEach(tr => {
+            let card = (tr.getAttribute('data-card') || tr.querySelectorAll('td')[0].innerText.trim()).toLowerCase();
+            curCardExp[card] = priorCardExp[card] || 0;
+            curCardInc[card] = priorCardInc[card] || 0;
+        });
+
+        txRows.forEach(tr => {
+            let dateStr = tr.getAttribute('data-date');
+            if (!dateStr) {
+                let parts = tr.querySelectorAll('td')[0].innerText.trim().split('-');
+                if (parts.length === 3) dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+
+            let matches = true;
+            if (dateStr) {
+                let [y, m, d] = dateStr.split('-');
+                if (selectedYear !== 'all' && y !== selectedYear) matches = false;
+                if (selectedMonth !== 'all' && m !== selectedMonth) matches = false;
+            }
+
+            let rowAcc = (tr.getAttribute('data-acc') || tr.querySelectorAll('td')[3].innerText).trim();
+            if (selectedAccountFilter && rowAcc.toLowerCase() !== selectedAccountFilter.toLowerCase()) {
+                matches = false;
+            }
+
+            if (matches) {
+                tr.style.display = '';
+                let cat = tr.getAttribute('data-cat') || (tr.querySelectorAll('td')[2].innerText.includes('Income') ? 'Income' : 'Expense');
+                let acc = rowAcc.toLowerCase();
+                let amt = parseFloat(tr.getAttribute('data-amt') || tr.querySelectorAll('td')[4].innerText || 0);
+
+                if (curSavingsInf[acc] !== undefined) {
+                    if (cat === 'Income') curSavingsInf[acc] += amt;
+                    else curSavingsOut[acc] += amt;
+                }
+                if (curCardExp[acc] !== undefined) {
+                    if (cat === 'Expense') curCardExp[acc] += amt;
+                    else if (cat === 'Income') curCardInc[acc] += amt;
+                }
+            } else {
+                tr.style.display = 'none';
+            }
+        });
+
+        let totalSavingsBalance = 0;
+        document.querySelectorAll('#savingsBody tr').forEach(tr => {
+            let accName = tr.getAttribute('data-acc') || tr.querySelectorAll('td')[0].innerText.trim();
+            let initial = parseFloat(tr.getAttribute('data-initial') || 0);
+            let key = accName.toLowerCase();
+            let inf = curSavingsInf[key] || 0;
+            let out = curSavingsOut[key] || 0;
+            let bal = initial + inf - out;
+
+            tr.querySelector('.acc-inflow').innerText = inf.toFixed(2);
+            tr.querySelector('.acc-outflow').innerText = out.toFixed(2);
+            tr.querySelector('.acc-balance').innerText = bal.toFixed(2);
+            totalSavingsBalance += bal;
+        });
+
+        let totalCreditDue = 0;
+        document.querySelectorAll('#creditCardBody tr').forEach, tr => {
+            // handled correctly in loop below
+        };
+        document.querySelectorAll('#creditCardBody tr').forEach(tr => {
+            let cardName = tr.getAttribute('data-card') || tr.querySelectorAll('td')[0].innerText.trim();
+            let limit = parseFloat(tr.getAttribute('data-limit') || 0);
+            let key = cardName.toLowerCase();
+            let totalExp = curCardExp[key] || 0;
+            let totalInc = curCardInc[key] || 0;
+            let due = Math.max(0, totalExp - totalInc);
+            let avail = limit - due;
+
+            tr.querySelector('.card-due').innerText = due.toFixed(2);
+            tr.querySelector('.card-avail').innerText = avail.toFixed(2);
+            totalCreditDue += due;
+        });
+
+        document.getElementById('totalSavingsDisplay').innerText = "₹ " + totalSavingsBalance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('totalCreditDisplay').innerText = "₹ " + totalCreditDue.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function saveToLocalStorage() {
+        let savHTML = document.getElementById('savingsBody').innerHTML;
+        let crdHTML = document.getElementById('creditCardBody').innerHTML;
+        localStorage.setItem('fin_tx_data_v9', document.getElementById('transactionBody').innerHTML);
+        localStorage.setItem('fin_sav_data_v9', savHTML);
+        localStorage.setItem('fin_crd_data_v9', crdHTML);
+    }
+
+    function loadSavedData() {
+        let savedTx = localStorage.getItem('fin_tx_data_v9');
+        if (savedTx) document.getElementById('transactionBody').innerHTML = savedTx;
+        let savedSav = localStorage.getItem('fin_sav_data_v9');
+        if (savedSav) document.getElementById('savingsBody').innerHTML = savedSav;
+        let savedCrd = localStorage.getItem('fin_crd_data_v9');
+        if (savedCrd) document.getElementById('creditCardBody').innerHTML = savedCrd;
+    }
+
+    function downloadUpdatedHTML() {
+        let docType = "<!DOCTYPE html>\n";
+        let htmlStr = docType + document.documentElement.outerHTML;
+        let blob = new Blob([htmlStr], { type: 'text/html;charset=utf-8' });
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'Financial_Dashboard_Neon_EN.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function showToast() {
+        let toast = document.getElementById('toastMsg');
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    function showCustomToast(msg) {
+        let toast = document.getElementById('toastMsg');
+        toast.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${msg}`;
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+    }
+</script>
+
+</body></html>
